@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>语通助手 - 基础版</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, "Microsoft YaHei", sans-serif;
+        }
+        body, html {
+            height: 100%;
+            background-color: #f8fafc;
+            overflow: hidden;
+        }
+        #app {
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+        /* 头部样式 */
+        .header {
+            padding: 10px 15px;
+            background: white;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header h1 {
+            font-size: 18px;
+            color: #1e293b;
+        }
+        .header-btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 6px;
+            background: #f1f5f9;
+            color: #1e293b;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        .home-btn {
+            background: #3b82f6;
+            color: white;
+        }
+        /* 面包屑 */
+        .breadcrumb {
+            padding: 8px 15px;
+            background: #f1f5f9;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            overflow-x: auto;
+            white-space: nowrap;
+            min-height: 40px;
+        }
+        .breadcrumb span {
+            font-size: 14px;
+            color: #64748b;
+        }
+        .breadcrumb-item {
+            padding: 2px 8px;
+            background: white;
+            border: 1px solid #bfdbfe;
+            border-radius: 4px;
+            color: #3b82f6;
+            font-size: 14px;
+        }
+        /* 返回按钮 */
+        .back-btn {
+            margin: 10px 15px;
+            padding: 15px 0;
+            width: calc(100% - 30px);
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            background: #f8fafc;
+            color: #475569;
+            font-size: 18px;
+            cursor: pointer;
+        }
+        /* 按钮网格 */
+        .btn-grid {
+            flex: 1;
+            padding: 15px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            overflow-y: auto;
+        }
+        .func-btn {
+            padding: 20px 10px;
+            border: 2px solid #e2e8f0;
+            border-radius: 20px;
+            background: white;
+            color: #1e293b;
+            font-size: 24px;
+            text-align: center;
+            cursor: pointer;
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .func-btn:active {
+            transform: scale(0.96);
+            background: #f1f5f9;
+        }
+        .sos-btn {
+            background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
+            color: white !important;
+            border-color: transparent !important;
+        }
+        .func-btn.selected {
+            border-color: #3b82f6;
+            background: #f1f5f9;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <!-- 头部 -->
+        <div class="header">
+            <h1>语通助手</h1>
+            <div>
+                <button class="header-btn" id="fullscreen-btn">全屏显示</button>
+                <button class="header-btn home-btn" id="home-btn" style="display: none;">首页</button>
+            </div>
+        </div>
+        
+        <!-- 面包屑 -->
+        <div class="breadcrumb" id="breadcrumb">
+            <span>请点击选择：</span>
+        </div>
+        
+        <!-- 返回按钮 -->
+        <button class="back-btn" id="back-btn" style="display: none;">返回上一层</button>
+        
+        <!-- 功能按钮网格 -->
+        <div class="btn-grid" id="btn-grid"></div>
+    </div>
+
+    <script>
+        // 核心数据（保持不变）
+        const EXERCISE_WARNING = "老先生，您现在还没有完全康复，下床有危险，请躺好，慢慢静养。";
+        const DATA = [
+            {
+                id: 'uncomfortable', label: '我不舒服',
+                sub: [
+                    { id: 'head_neck', label: '头和脖子', sub: [
+                        { id: 'h1', label: '沉甸甸', text: '我感觉头沉甸甸的，抬不起来，想睡觉。' },
+                        { id: 'h2', label: '晕乎乎', text: '我感觉头晕眼花，天旋地转，很不舒服。' },
+                        { id: 'h3', label: '跳着疼', text: '我感觉脑门这里突突地跳着疼，像打鼓一样。' },
+                        { id: 'h4', label: '转不动', text: '我感觉脖子后面僵住了，转一下都费劲。' }
+                    ]},
+                    { id: 'breath', label: '呼吸嗓子', sub: [
+                        { id: 'br1', label: '气不够', text: '我感觉气儿短，上不来气，胸口闷得慌。' },
+                        { id: 'br2', label: '卡住了', text: '我感觉嗓子里有东西堵着，咽不下也咳不出。' },
+                        { id: 'br3', label: '憋闷', text: '我感觉胸口像压了大石头，憋得喘不过气。' },
+                        { id: 'br4', label: '火烧感', text: '我感觉嗓子里火烧火燎的，像着了火一样。' }
+                    ]},
+                    { id: 'stomach', label: '内脏肚子', sub: [
+                        { id: 'st1', label: '胀鼓鼓', text: '我感觉肚子胀鼓鼓的，里面全是气，非常难受。' },
+                        { id: 'st2', label: '拧毛巾', text: '我肚子里像拧毛巾一样绞着疼，一阵阵的。' },
+                        { id: 'st3', label: '坠得慌', text: '我感觉肚子里沉甸甸坠得慌，老想拉大便。' },
+                        { id: 'st4', label: '反胃', text: '我胃里不干净，老想往上翻，想呕吐。' }
+                    ]},
+                    { id: 'fingers', label: '手指尖尖', sub: [
+                        { id: 'ha1', label: '针刺感', text: '我指尖像有细针在扎一样，刺痛刺痛的。' },
+                        { id: 'ha2', label: '没知觉', text: '我指尖木木的，一点知觉也没有，像木头。' },
+                        { id: 'ha3', label: '冷冰冰', text: '我指尖冰凉，像泡在凉水里，暖不热。' },
+                        { id: 'ha4', label: '没力气', text: '我手指头发软，一点力气也使不上，拿不住东西。' }
+                    ]},
+                    { id: 'legs_feet', label: '腿脚下肢', sub: [
+                        { id: 'lf1', label: '软绵绵', text: '我这腿像棉花一样，一点劲都没有，抬不动。' },
+                        { id: 'lf2', label: '抽住了', text: '我腿肚子的筋抽住了，硬邦邦的，疼。' },
+                        { id: 'lf3', label: '膝盖硬', text: '我膝盖这里像生了锈，弯不过来，很痛苦。' },
+                        { id: 'lf4', label: '脚趾痛', text: '我大脚趾这里胀得不行，像要裂开一样疼。' }
+                    ]},
+                    { id: 'skin', label: '皮肤身上', sub: [
+                        { id: 'sk1', label: '像虫爬', text: '我身上这块感觉有虫子在爬，又麻又痒。' },
+                        { id: 'sk2', label: '火辣辣', text: '我这块皮肤火辣辣的疼，像被开水烫了。' },
+                        { id: 'sk3', label: '紧绷绷', text: '我感觉这块皮肤紧绷绷的，像要撑破了。' },
+                        { id: 'sk4', label: '刺刺疼', text: '我这皮肤感觉刺刺的，像被草扎了一样。' }
+                    ]},
+                    { id: 'whole_body', label: '全身感觉', sub: [
+                        { id: 'wb1', label: '出虚汗', text: '我身上直冒冷汗，感觉人虚透了。' },
+                        { id: 'wb2', label: '心乱跳', text: '我心里慌得很，心跳得乱七八糟。' },
+                        { id: 'wb3', label: '冷得抖', text: '我冷得全身打哆嗦，骨头缝里都冒冷气。' },
+                        { id: 'wb4', label: '瘫软', text: '我浑身没有一点力气，瘫在这里很难受。' }
+                    ]}
+                ]
+            },
+            { id: 'exercise', label: '我要动动', sub: [
+                { id: 'ex1', label: '下床走走', text: EXERCISE_WARNING },
+                { id: 'ex2', label: '坐轮椅', text: EXERCISE_WARNING },
+                { id: 'ex3', label: '扶我站站', text: EXERCISE_WARNING }
+            ]},
+            { id: 'medicine', label: '该吃药了', text: '请问我吃过药了吗？现在是不是该吃药了？' },
+            { id: 'call_family', label: '找家人', sub: [
+                { id: 'f1', label: '爱人', text: '请帮我叫一下我爱人，谢谢。' },
+                { id: 'f2', label: '女儿', text: '请帮我叫一下我女儿，谢谢。' },
+                { id: 'f3', label: '儿子', text: '请帮我叫一下我儿子，谢谢。' }
+            ]},
+            { id: 'eating', label: '喝水吃饭', sub: [
+                { id: 'e1', label: '水太烫了', text: '这水太烫了，请帮我放凉一点再喂，谢谢。' },
+                { id: 'e2', label: '想喝温水', text: '我想喝口温水，请喂我一点，谢谢。' },
+                { id: 'e3', label: '想吃东西', text: '我肚子有点饿了，请帮我准备一点吃的，谢谢。' }
+            ]},
+            { id: 'body', label: '身体排泄', sub: [
+                { id: 'b1', label: '要拉大便', text: '我想拉大便，请帮我拿一下便盆，谢谢。' },
+                { id: 'b2', label: '要拉小便', text: '我想解小便，请帮帮我，谢谢。' },
+                { id: 'b3', label: '换尿不湿', text: '我的尿不湿湿透了，请帮我换个干净的，谢谢。' }
+            ]},
+            { id: 'env', label: '调整姿势', sub: [
+                { id: 'v1', label: '左侧翻身', text: '我想往左边翻个身，请帮帮我，谢谢。' },
+                { id: 'v2', label: '右侧翻身', text: '我想往右边翻个身，请帮帮我，谢谢。' },
+                { id: 'v3', label: '摇高床头', text: '请帮我把床头摇高一点，谢谢。' },
+                { id: 'v4', label: '冷加被子', text: '我觉得有点冷，请帮我多盖一层被子，谢谢。' }
+            ]},
+            { id: 'tubes', label: '管路护理', sub: [
+                { id: 't1', label: '鼻饲管', sub: [
+                    { id: 't1_1', label: '管子太紧', text: '我的鼻饲管勒得太紧了，请帮我调整一下，谢谢。' },
+                    { id: 't1_2', label: '感觉堵塞', text: '我觉得鼻饲管好像堵住了，请帮我检查一下，谢谢。' }
+                ]},
+                { id: 't2', label: '导尿管', sub: [
+                    { id: 't2_1', label: '尿袋满了', text: '我的尿袋好像快满了，请帮我倒一下，谢谢。' },
+                    { id: 't2_2', label: '那里不适', text: '导尿管插的地方很不舒服，请帮我看看，谢谢。' }
+                ]}
+            ]},
+            { id: 'leisure', label: '娱乐看报', sub: [
+                { id: 'l1', label: '新闻综合', text: '我想看新闻综合频道，请帮我调一下电视，谢谢。' },
+                { id: 'l2', label: '看报纸', text: '我想看会报纸，请帮我拿过来并戴上眼镜，谢谢。' },
+                { id: 'l3', label: '听音乐', text: '我想听点轻松的音乐，请帮我放一下，谢谢。' }
+            ]},
+            { id: 'sos', label: '紧急呼叫', text: '医生护士快来！我感觉非常难受，请救救我，谢谢！' }
+        ];
+
+        // 全局状态
+        let currentData = DATA;
+        let pathHistory = [];
+        let activeBtnId = null;
+        let isFullscreen = false;
+
+        // DOM元素
+        const btnGrid = document.getElementById('btn-grid');
+        const backBtn = document.getElementById('back-btn');
+        const breadcrumb = document.getElementById('breadcrumb');
+        const homeBtn = document.getElementById('home-btn');
+        const fullscreenBtn = document.getElementById('fullscreen-btn');
+
+        // 语音播报函数（兼容优化）
+        function speak(text) {
+            if (!text) return;
+            
+            // 检测语音合成是否可用
+            if (!window.speechSynthesis) {
+                alert('当前设备不支持语音播报，请更换设备重试');
+                return;
+            }
+
+            const synth = window.speechSynthesis;
+            // 停止正在播放的语音
+            if (synth.speaking) {
+                synth.cancel();
+            }
+
+            // 创建语音实例
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'zh-CN';
+            utterance.rate = 0.75; // 语速放慢，适合老年人
+            utterance.volume = 1;
+            utterance.pitch = 1;
+
+            // 尝试播放
+            try {
+                synth.speak(utterance);
+            } catch (e) {
+                alert('语音播放失败：' + e.message);
+            }
+        }
+
+        // 渲染按钮网格
+        function renderButtons() {
+            // 清空网格
+            btnGrid.innerHTML = '';
+            
+            // 生成按钮
+            currentData.forEach(item => {
+                const btn = document.createElement('button');
+                btn.id = item.id;
+                btn.className = `func-btn ${item.id === 'sos' ? 'sos-btn' : ''} ${activeBtnId === item.id ? 'selected' : ''}`;
+                btn.textContent = item.label;
+                
+                // 点击事件
+                btn.addEventListener('click', () => {
+                    // 设置激活状态
+                    activeBtnId = item.id;
+                    renderButtons();
+                    
+                    // 语音播报
+                    const speakText = item.text || item.label;
+                    speak(speakText);
+                    
+                    // 如果有子菜单，进入下一级
+                    if (item.sub) {
+                        setTimeout(() => {
+                            pathHistory.push(item);
+                            currentData = item.sub;
+                            updateUI();
+                            activeBtnId = null;
+                        }, 200);
+                    } else {
+                        // 无自菜单，500ms后取消激活
+                        setTimeout(() => {
+                            activeBtnId = null;
+                            renderButtons();
+                        }, 500);
+                    }
+                });
+                
+                btnGrid.appendChild(btn);
+            });
+        }
+
+        // 更新UI（面包屑、返回按钮、首页按钮）
+        function updateUI() {
+            // 渲染面包屑
+            breadcrumb.innerHTML = '';
+            if (pathHistory.length === 0) {
+                breadcrumb.innerHTML = '<span>请点击选择：</span>';
+            } else {
+                pathHistory.forEach((item, index) => {
+                    const itemEl = document.createElement('span');
+                    itemEl.className = 'breadcrumb-item';
+                    itemEl.textContent = item.label;
+                    breadcrumb.appendChild(itemEl);
+                    
+                    if (index < pathHistory.length - 1) {
+                        const arrow = document.createElement('span');
+                        arrow.textContent = '→';
+                        arrow.style.color = '#64748b';
+                        breadcrumb.appendChild(arrow);
+                    }
+                });
+            }
+            
+            // 显示/隐藏返回按钮和首页按钮
+            backBtn.style.display = pathHistory.length > 0 ? 'block' : 'none';
+            homeBtn.style.display = pathHistory.length > 0 ? 'inline-block' : 'none';
+            
+            // 重新渲染按钮
+            renderButtons();
+        }
+
+        // 返回上一级
+        function goBack() {
+            if (pathHistory.length === 0) return;
+            
+            pathHistory.pop();
+            currentData = pathHistory.length === 0 ? DATA : pathHistory[pathHistory.length - 1].sub;
+            speak('返回');
+            updateUI();
+        }
+
+        // 回到首页
+        function goHome() {
+            pathHistory = [];
+            currentData = DATA;
+            speak('首页');
+            updateUI();
+        }
+
+        // 全屏切换
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                // 进入全屏
+                const docEl = document.documentElement;
+                if (docEl.requestFullscreen) {
+                    docEl.requestFullscreen();
+                } else if (docEl.webkitRequestFullscreen) {
+                    docEl.webkitRequestFullscreen();
+                } else if (docEl.msRequestFullscreen) {
+                    docEl.msRequestFullscreen();
+                }
+                fullscreenBtn.textContent = '退出全屏';
+                isFullscreen = true;
+            } else {
+                // 退出全屏
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                } else if (document.webkitExitFullscreen) {
+                    document.webkitExitFullscreen();
+                } else if (document.msExitFullscreen) {
+                    document.msExitFullscreen();
+                }
+                fullscreenBtn.textContent = '全屏显示';
+                isFullscreen = false;
+            }
+        }
+
+        // 绑定事件
+        backBtn.addEventListener('click', goBack);
+        homeBtn.addEventListener('click', goHome);
+        fullscreenBtn.addEventListener('click', toggleFullscreen);
+
+        // 监听全屏状态变化
+        document.addEventListener('fullscreenchange', () => {
+            isFullscreen = !!document.fullscreenElement;
+            fullscreenBtn.textContent = isFullscreen ? '退出全屏' : '全屏显示';
+        });
+
+        // 初始化页面
+        renderButtons();
+
+        // 预初始化语音引擎（解决首次点击无声音）
+        setTimeout(() => {
+            if (window.speechSynthesis) {
+                const dummy = new SpeechSynthesisUtterance('');
+                window.speechSynthesis.speak(dummy);
+                setTimeout(() => window.speechSynthesis.cancel(dummy), 0);
+            }
+        }, 1000);
+    </script>
+</body>
+</html>
