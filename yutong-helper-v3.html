@@ -143,7 +143,7 @@
     </div>
 
     <script>
-        // 核心数据（保持不变）
+        // 核心数据（按要求修改和新增）
         const EXERCISE_WARNING = "老先生，您现在还没有完全康复，下床有危险，请躺好，慢慢静养。";
         const DATA = [
             {
@@ -193,21 +193,30 @@
                     ]}
                 ]
             },
-            { id: 'exercise', label: '我要动动', sub: [
-                { id: 'ex1', label: '下床走走', text: EXERCISE_WARNING },
-                { id: 'ex2', label: '坐轮椅', text: EXERCISE_WARNING },
-                { id: 'ex3', label: '扶我站站', text: EXERCISE_WARNING }
+            // 我要动一动 - 修改和新增
+            { id: 'exercise', label: '我要动一动', sub: [
+                { id: 'ex1', label: '下床走走', text: '请扶我下床走走' },
+                { id: 'ex2', label: '坐轮椅', text: '请帮我做轮椅' },
+                { id: 'ex3', label: '扶我坐坐', text: '请扶我坐起' },
+                { id: 'ex4', label: '什么时候能动', text: '我什么时候可以动' }
             ]},
             { id: 'medicine', label: '该吃药了', text: '请问我吃过药了吗？现在是不是该吃药了？' },
+            // 找家人 - 新增护工
             { id: 'call_family', label: '找家人', sub: [
                 { id: 'f1', label: '爱人', text: '请帮我叫一下我爱人，谢谢。' },
                 { id: 'f2', label: '女儿', text: '请帮我叫一下我女儿，谢谢。' },
-                { id: 'f3', label: '儿子', text: '请帮我叫一下我儿子，谢谢。' }
+                { id: 'f3', label: '儿子', text: '请帮我叫一下我儿子，谢谢。' },
+                { id: 'f4', label: '护工', text: '请帮我叫一下护工，谢谢。' }
             ]},
-            { id: 'eating', label: '喝水吃饭', sub: [
+            // 吃饭喝水改为生活需求 - 新增多个选项
+            { id: 'living_needs', label: '生活需求', sub: [
                 { id: 'e1', label: '水太烫了', text: '这水太烫了，请帮我放凉一点再喂，谢谢。' },
                 { id: 'e2', label: '想喝温水', text: '我想喝口温水，请喂我一点，谢谢。' },
-                { id: 'e3', label: '想吃东西', text: '我肚子有点饿了，请帮我准备一点吃的，谢谢。' }
+                { id: 'e3', label: '想吃东西', text: '我肚子有点饿了，请帮我准备一点吃的，谢谢。' },
+                { id: 'e4', label: '饱了', text: '我饱了，不想吃了' },
+                { id: 'e5', label: '关灯', text: '请帮我关灯' },
+                { id: 'e6', label: '拉围帘', text: '请帮我拉围帘' },
+                { id: 'e7', label: '拿纸巾', text: '请帮我拿纸巾' }
             ]},
             { id: 'body', label: '身体排泄', sub: [
                 { id: 'b1', label: '要拉大便', text: '我想拉大便，请帮我拿一下便盆，谢谢。' },
@@ -220,14 +229,27 @@
                 { id: 'v3', label: '摇高床头', text: '请帮我把床头摇高一点，谢谢。' },
                 { id: 'v4', label: '冷加被子', text: '我觉得有点冷，请帮我多盖一层被子，谢谢。' }
             ]},
+            // 管路护理 - 大量修改和新增
             { id: 'tubes', label: '管路护理', sub: [
-                { id: 't1', label: '鼻饲管', sub: [
-                    { id: 't1_1', label: '管子太紧', text: '我的鼻饲管勒得太紧了，请帮我调整一下，谢谢。' },
-                    { id: 't1_2', label: '感觉堵塞', text: '我觉得鼻饲管好像堵住了，请帮我检查一下，谢谢。' }
+                { id: 't1', label: '胃管', sub: [ // 鼻饲管改为胃管
+                    { id: 't1_1', label: '管子太紧', text: '我的胃管勒得太紧了，请帮我调整一下，谢谢。' },
+                    { id: 't1_2', label: '感觉堵塞', text: '我觉得胃管好像堵住了，请帮我检查一下，谢谢。' }
                 ]},
                 { id: 't2', label: '导尿管', sub: [
                     { id: 't2_1', label: '尿袋满了', text: '我的尿袋好像快满了，请帮我倒一下，谢谢。' },
-                    { id: 't2_2', label: '那里不适', text: '导尿管插的地方很不舒服，请帮我看看，谢谢。' }
+                    { id: 't2_2', label: '那里不适', text: '导尿管插的地方很不舒服，请帮我看看，谢谢。' },
+                    { id: 't2_3', label: '尿管在漏', text: '尿管在漏，床垫湿了' } // 新增
+                ]},
+                { id: 't3', label: '静脉导管', sub: [ // 新增静脉导管
+                    { id: 't3_1', label: '不舒服', text: '打针部位不舒服，帮我看一看' },
+                    { id: 't3_2', label: '不通畅', text: '吊水不通畅，帮我看一看' }
+                ]},
+                { id: 't4', label: '氧气管', sub: [ // 新增氧气管
+                    { id: 't4_1', label: '太紧', text: '氧气管太紧，不舒服' },
+                    { id: 't4_2', label: '没有气', text: '氧气管没有气，帮我看一下' }
+                ]},
+                { id: 't5', label: '其他管路', sub: [ // 新增其他管路
+                    { id: 't5_1', label: '不舒服', text: '管子不舒服，帮我看一下' }
                 ]}
             ]},
             { id: 'leisure', label: '娱乐看报', sub: [
@@ -235,6 +257,7 @@
                 { id: 'l2', label: '看报纸', text: '我想看会报纸，请帮我拿过来并戴上眼镜，谢谢。' },
                 { id: 'l3', label: '听音乐', text: '我想听点轻松的音乐，请帮我放一下，谢谢。' }
             ]},
+            { id: 'stationery', label: '纸、笔', text: '请拿纸笔给我，我要写字' }, // 新增纸、笔
             { id: 'sos', label: '紧急呼叫', text: '医生护士快来！我感觉非常难受，请救救我，谢谢！' }
         ];
 
